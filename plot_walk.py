@@ -1,7 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt # google this for more info
 import csv
-
+#make sure the csv file has all columns filled out on last row
+#this will plot all 6 axes's on one graph
+#change variable "signal_fname" in line 24 to choose which signal to plot 
 
 def read_file(fname):
 	data = []

@@ -3,7 +3,8 @@ import matplotlib.pyplot as plt # google this for more info
 import csv
 #make sure the csv file has all columns filled out on last row
 #this will plot all 6 axes's on one graph
-#change variable "signal_fname" in line 24 to choose which signal to plot 
+#put this file in same file as the signal; cd to this directory and then "python plot_walk.py" on terminal
+#change variable "signal_fname" in line 25 to choose which signal to plot 
 
 def read_file(fname):
 	data = []

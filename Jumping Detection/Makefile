@@ -12,6 +12,8 @@ jump_detection: jump_detection.c
 	$(CC) $(LDFLAGS) -o jump_detection jump_detection.c
 
 clean:
-	rm -rf jump_detection producer data_* *~
-	rm -rf jump_peaksAndTroughs.csv jumps.csv jump_training_file.txt
+	rm -rf data_*
+	rm -rf jump_detection producer *~
+	rm -rf jump_peaksAndTroughs.csv jumps.csv jump_training_file*
+	rm -rf jump_high_* jump_low_* jumps* 
 	

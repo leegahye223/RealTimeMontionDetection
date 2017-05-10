@@ -143,7 +143,8 @@ void jump_neural_network()
 	air_time = (double *) malloc(sizeof(double) * N_SAMPLES);
 	magnitude = (double *) malloc(sizeof(double) * N_SAMPLES);
     
-    for (k = 0; k < 1; k++) {
+	int numTrainingFiles = 1;
+    for (k = 0; k < numTrainingFiles; k++) {
 
 		// Open the files containing the jump characteristics
 		switch(k) {
@@ -157,7 +158,7 @@ void jump_neural_network()
 					}
 					break;
 			case 1:
-					snprintf(ifile_name, BUFF_SIZE, "jump_high_training_file.txt");
+					snprintf(ifile_name, BUFF_SIZE, "jump_training_file_HIGH.txt");
 					//printf("Attempting to read from file \'%s\'.\n", ifile_name);
 					fp = fopen(ifile_name, "r");
 					if (fp == NULL) {
@@ -186,7 +187,7 @@ void jump_neural_network()
 					 );
 				exit(EXIT_FAILURE);	
 			}
-			//getline(&line, &len, fp);   // Discard the line with 1s and -1s
+			getline(&line, &len, fp);   // Discard the line with 1s and -1s
 			i++;
 		}
 		fclose(fp);
@@ -211,10 +212,10 @@ void jump_neural_network()
 	// Display the confusion matrix
 	/*
 	printf("\n           Low Jump   High Jump\n");
-	for (k = 0; k < 1; k++) {
+	for (k = 0; k < numTrainingFiles; k++) {
 		switch(k)
 		{
-			case 0: printf("Jumps  ");
+			case 0: printf("Low Jump  ");
 					break;
 					
 			case 1: printf("High Jump ");
@@ -275,7 +276,7 @@ void jump_detection(const char *fname)
 	double center3 = -0.3;
 	
 	// Stride time is the minimum time spacing between peaks and troughs 
-	double stride_time = 0.3;
+	double stride_time = 0.20;
 	
 	// Threshold Values
     double threshold_accelX = 0.75;          
@@ -283,12 +284,15 @@ void jump_detection(const char *fname)
     double threshold_accelZ = 0.80;
     double threshold_gyroX  = 50.0;     
     double threshold_gyroY  = 30.0;         
-    double threshold_gyroZ  = 90.0; 
+    double threshold_gyroZ  = 90.0;
+
+	// Jump detection constraints
+	double jump_time        = 0.30;
 	double jump_range_low   = 1.50;
 	double jump_range_high  = 16.0;
 
 	// Mode determines which data set we are using
-	double mode = 1.0;
+	int mode = 0;
 	
 	// Allocate memory for the file names
 	//ifile_name = (char *) malloc(sizeof(char) * BUFF_SIZE);
@@ -304,7 +308,24 @@ void jump_detection(const char *fname)
 	//ifile_name = "data.csv";
 	ofile_pt_name = "jump_peaksAndTroughs.csv";
 	ofile_jump_name = "jumps.csv";
-	train_file_name = "jump_training_file.txt";
+	if (mode == 1)
+	{
+		ofile_pt_name = "jump_low_peaksAndTroughs.csv";
+		ofile_jump_name = "jumps_low.csv";
+		train_file_name = "jump_training_file_LOW.txt";
+	}
+	else if (mode == 2)
+	{
+		ofile_pt_name = "jump_high_peaksAndTroughs.csv";
+		ofile_jump_name = "jumps_high.csv";
+		train_file_name = "jump_training_file_HIGH.txt";
+	}
+	else
+	{
+		ofile_pt_name = "jump_peaksAndTroughs.csv";
+		ofile_jump_name = "jumps.csv";
+		train_file_name = "jump_training_file.txt";
+	}
 	//printf("Files are %s, %s, %s, %s\n", ifile_name, ofile_pt_name, ofile_jump_name, train_file_name);
 
 	/*
@@ -444,12 +465,6 @@ void jump_detection(const char *fname)
 	if (line) 
 		free(line);
 	
-	// Delete the current data file to not process it again in the future
-	printf("Deleting file \'%s\'\n", fname);
-	sprintf(delete_command, "rm %s", fname);
-	system(delete_command);
-	
-    //input file closed
 	/* 
 	 * From selected thresholds, 
 	 * find indicies of peaks
@@ -560,7 +575,7 @@ void jump_detection(const char *fname)
 		int k, idx_next;
 		int n_P_new = n_P;
 		int n_T_new = n_T;
-		// stride_time passed as argument
+		// stride_time defined at top
         
 		// Process Peaks
 		for (i = 0; i < n_P_new-1; i++)
@@ -627,10 +642,10 @@ void jump_detection(const char *fname)
 			// The jump must have a minimum magnitude
 			
 			int peak_index, trough_index;
-			double jump_time = 0.30;               // timing constraint; time between peak and trough
 			double jump_mag = 0;                   // difference between peak and trough magnitude
-			//jump_range_low passed as argument    // magnitude constraint, low
-			//jump_range_high passed as argument   // magnitude constraint, high 
+			//jump_time defined at top             // timing constraint; time between peak and trough
+			//jump_range_low defined at top        // magnitude constraint, low
+			//jump_range_high defined at top       // magnitude constraint, high 
 			
 			// Sort the peaks and troughs in chronological order (by index) and place them into one array
 			n_PT = 0;	
@@ -691,6 +706,7 @@ void jump_detection(const char *fname)
 						n_J += 2;
 					}
 				}
+				
 			}
 			
 			printf("Jump detection success with %d jumps detected.\n", n_J/4);
@@ -790,7 +806,7 @@ void jump_detection(const char *fname)
 			int rise_idx_trough, rise_idx_peak, fall_idx_trough, fall_idx_peak;
 			double time_scale_factor = 1.00;
 			double time_offset = 0.00;
-			double magnitude_scale_factor = 0.0625; // For 8G resolution
+			double magnitude_scale_factor = 1.00;
 			double magnitude_offset = 0.00;
 			
 			for (i = 0; i < n_J-3; i = i + 4)
@@ -826,6 +842,11 @@ void jump_detection(const char *fname)
 	
 	// Perform neural network analysis
 	jump_neural_network();
+	
+	// Delete the current data file to not process it again in the future
+	//printf("Deleting file \'%s\'\n", fname);
+	sprintf(delete_command, "rm %s", fname);
+	system(delete_command);
 	
 	//printf("Full execution successful.\n\n");
 }
@@ -871,7 +892,7 @@ int main()
 
 			sleep(1);
 		}
-
+		
 		// close the file that contains other filenames
 		fclose(fp);
 

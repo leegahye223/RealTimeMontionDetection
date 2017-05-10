@@ -129,7 +129,7 @@ void jump_neural_network()
     fann_type input[4];
     struct fann *ann;
     
-    ann = fann_create_from_file("train_data.net");
+    ann = fann_create_from_file("jump_train_data.net");
 
     // Allocate memory
     ifile_name = (char *) malloc(sizeof(char) * BUFF_SIZE);
@@ -187,7 +187,7 @@ void jump_neural_network()
 					 );
 				exit(EXIT_FAILURE);	
 			}
-			getline(&line, &len, fp);   // Discard the line with 1s and -1s
+			//getline(&line, &len, fp);   // Discard the line with 1s and -1s
 			i++;
 		}
 		fclose(fp);
@@ -697,7 +697,6 @@ void jump_detection(const char *fname)
 				if ((x[idx] < center) && (x[idx_next] > center))     
 				{
 					// Must satisfy timing and threshold requirements
-					// The trough and peak representing the "fall" is not added to the jump data
 					jump_mag = x[idx_next] - x[idx];
 					if (((t[idx_next] - t[idx]) < jump_time) && (jump_mag > jump_range_low) && (jump_mag < jump_range_high))
 					{
